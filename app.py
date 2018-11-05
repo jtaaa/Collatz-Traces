@@ -113,7 +113,7 @@ app.layout = html.Div(
       '''),
       html.Div(children='''
         The problem has remained essentially unscathed by any attempts
-        at proof since its introduction in 1937.
+        to prove it since its introduction in 1937.
       '''),
     ],
   ),
