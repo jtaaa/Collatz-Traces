@@ -3,33 +3,9 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
+import pandas as pd
 
-def memoize(func):
-  results = {}
-  def new_func(x):
-    if x not in results:            
-      results[x] = func(x)
-    return results[x]
-  return new_func
-
-@memoize
-def collatz(n):
-  if n == 1:
-    return [1], 1, 1, 0, 1
-  if n % 2 == 0:
-    trace, steps, largest, evens, odds = collatz(n // 2)
-    evens += 1
-  else:
-    trace, steps, largest, evens, odds = collatz(3 * n + 1)
-    odds += 1
-  steps += 1
-  if n > largest: largest = n
-  return [n] + trace, steps, largest, evens, odds
-
-start_nums = range(2, 10000)
-odd_steps = map(lambda x: collatz(x)[1], range(2, 10000, 2))
-even_steps = map(lambda x: collatz(x)[1], range(3, 10000, 2))
-largests = filter(lambda x: x <= 50000, map(lambda x: collatz(x)[2], start_nums))
+collatz = pd.read_csv('data/collatz.csv', index_col=0)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', 'styles.css']
 
@@ -163,20 +139,20 @@ app.layout = html.Div(
         figure={
           'data': [
             go.Scatter(
-              x=list(range(2, 10000, 2)),
-              y=list(odd_steps),
+              x=collatz[::2].index,
+              y=collatz.iloc[::2]['steps'],
               mode='markers',
               marker={'color': 'red'},
               opacity=0.7,
-              name='Odd Start Number',
+              name='Even Start Number',
             ),
             go.Scatter(
-              x=list(range(3, 10000, 2)),
-              y=list(even_steps),
+              x=collatz.index[1::2],
+              y=collatz.iloc[1::2]['steps'],
               mode='markers',
               marker={'color': '#629FCA'},
               opacity=0.7,
-              name='Even Start Number',
+              name='Odd Start Number',
             ),
           ],
           'layout': {
@@ -225,8 +201,8 @@ app.layout = html.Div(
         figure={
           'data': [
             go.Scatter(
-              x=list(start_nums),
-              y=list(largests),
+              x=collatz.index,
+              y=collatz.loc[collatz['largest'] < 50000, 'largest'],
               mode='markers',
               opacity=0.7,
             ),
@@ -273,7 +249,7 @@ app.layout = html.Div(
   dash.dependencies.Output('collatz-trace-graph', 'figure'),
   [dash.dependencies.Input('start-num-slider', 'value')])
 def update_collatz_trace(start_num):
-  trace = collatz(start_num)[0]
+  trace = pd.eval(collatz.loc[start_num, 'trace'])
   return {
     'data': [
       {'x': len(trace), 'y': trace, 'type': 'line'},
@@ -296,29 +272,26 @@ def update_start_number(start_num):
   dash.dependencies.Output('metric-steps', 'children'),
   [dash.dependencies.Input('start-num-slider', 'value')])
 def update_steps(start_num):
-  return collatz(start_num)[1]
+  return collatz.loc[start_num, 'steps']
 
 @app.callback(
   dash.dependencies.Output('metric-largest-num', 'children'),
   [dash.dependencies.Input('start-num-slider', 'value')])
 def update_largest_number(start_num):
-  return collatz(start_num)[2]
+  return collatz.loc[start_num, 'largest']
 
 @app.callback(
   dash.dependencies.Output('metric-even-steps', 'children'),
   [dash.dependencies.Input('start-num-slider', 'value')])
 def update_odd_steps(start_num):
-  return collatz(start_num)[3]
+  return collatz.loc[start_num, 'evens']
 
 @app.callback(
   dash.dependencies.Output('metric-odd-steps', 'children'),
   [dash.dependencies.Input('start-num-slider', 'value')])
 def update_even_steps(start_num):
-  return collatz(start_num)[4]
+  return collatz.loc[start_num, 'odds']
 # end callback to update metrics
-
-
-
 
 if __name__ == '__main__':
   app.run_server(debug=True)
