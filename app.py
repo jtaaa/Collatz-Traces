@@ -16,7 +16,7 @@ app.layout = html.Div(
     'textAlign': 'center',
     'paddingLeft': '1em',
     'paddingRight': '1em',
-    'paddingTop': '0.5em',
+    'paddingTop': '1.5em',
   },
   children=[
   html.Div(
@@ -26,7 +26,7 @@ app.layout = html.Div(
       'alignItems': 'center',
     },
     children=[
-      html.H1(children='Collatz Conjecture Traces'),
+      html.H1(style={'paddingBottom': '0.5em'}, children='Collatz Conjecture Traces'),
       html.Div(
         children=[
           'The path of a number to 1 following the ',
